@@ -30,7 +30,6 @@ SOFTWARE.
 # Standard Library Imports
 from datetime import datetime
 import logging
-import argparse
 import sys
 import os
 
@@ -38,30 +37,31 @@ import os
 from function_helper import *
 from spatial_files import *
 
-def main():
-    print("Drag and drop your OSM file into the terminal, then press Enter.")
-    input_osm_file = input().strip()
+def is_file(input_path: str) -> bool:
+    return os.path.isfile(input_path)
 
-    data_directory = os.path.join("..", "data")
-    # get working directory
-    working_directory = os.getcwd()
+def is_directory(input_path: str) -> bool:
+    return os.path.isdir(input_path)
 
-    # Check if input_osm_file is .osm
-    if not is_osm_file(input_osm_file):
-        logging.error(f"{input_osm_file} is not a .osm file")
-        sys.exit(1)
-    
-     # Setup Logging
-    print("Setting up logging...")
-    log_file = os.path.join(working_directory, f"logging/logging_{datetime.now().strftime('%Y%m%d%H%M%S')}.log")
-    print(log_file)
-    logging.basicConfig(filename=log_file,
-                            level=logging.DEBUG,
-                            format='%(asctime)s [%(levelname)s]: %(message)s',
-                            datefmt='%Y-%m-%d %H:%M:%S')
-    
+def list_osm_files(input_dir_path: str) -> list:
+    # List all .osm files in the input directory
+    osm_files = [file for file in os.listdir(input_dir_path) if file.endswith(".osm")]
+    return osm_files
+
+def create_repair_directory(input_osm_file: str) -> None:
+    # Get the input file name with no extension
+    input_file_name = os.path.splitext(os.path.basename(input_osm_file))[0]
+    data_directory = os.path.join(os.path.dirname(input_osm_file), f"{input_file_name}_repair")
+    if not os.path.exists(data_directory):
+        os.makedirs(data_directory)
+
+
+def process_osm_file(input_osm_file: str):
+
     # Setup Output Filenames
     print("Setting up output filenames...")
+
+    data_directory = create_repair_directory(input_osm_file)
     duplicate_way_file = os.path.join(data_directory, input_osm_file.replace(".osm", "_duplicate_ways.shp"))
     repaired_osm_file = os.path.join(data_directory, input_osm_file.replace(".osm", "_repaired.osm"))
     
@@ -121,6 +121,48 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+
+    # Prompt User to drag file or directory
+    print("Drag and drop your OSM file/directory into the terminal, then press Enter.")
+    input_user_prompt = input().strip()
+
+    # get working directory
+    working_directory = os.getcwd()
+
+    # Setup Logging
+    print("Setting up logging...")
+    log_file = os.path.join(working_directory, f"logging/logging_{datetime.now().strftime('%Y%m%d%H%M%S')}.log")
+    print(log_file)
+    logging.basicConfig(filename=log_file,
+                            level=logging.DEBUG,
+                            format='%(asctime)s [%(levelname)s]: %(message)s',
+                            datefmt='%Y-%m-%d %H:%M:%S')
+
+    # Check if file
+    if is_file(input_user_prompt):
+        input_osm_file = input_user_prompt
+
+        # Check if input_osm_file is .osm
+        if not is_osm_file(input_osm_file):
+            print(f"{input_osm_file} is not a .osm file")
+            logging.error(f"{input_osm_file} is not a .osm file")
+            sys.exit(1)
+
+        process_osm_file(input_osm_file)
+
+    # Check if directory
+    elif is_directory(input_user_prompt):
+        data_directory = input_user_prompt
+        osm_files = list_osm_files(data_directory)
+        if len(osm_files) < 1:
+            print(f"No .osm files found in {data_directory}")
+            logging.error(f"No .osm files found in {data_directory}")
+            sys.exit(1)
+
+        for input_osm_file in list_osm_files(data_directory):
+            process_osm_file(input_osm_file)
+    
+
+    
 
     
