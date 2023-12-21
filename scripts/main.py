@@ -49,10 +49,7 @@ def list_osm_files(input_dir_path: str) -> list:
     return osm_files
 
 def create_repair_directory(input_osm_file: str) -> str:
-    # Get the input file name with no extension
-    input_file_name = os.path.splitext(os.path.basename(input_osm_file))[0]
-    input_file_name = input_file_name.replace(".", "_")
-    data_directory = os.path.join(os.path.dirname(input_osm_file), f"{input_file_name}_repair")
+    data_directory = os.path.join(os.path.dirname(input_osm_file), f"validation_repair")
     if not os.path.exists(data_directory):
         os.makedirs(data_directory)
 
