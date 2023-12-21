@@ -48,22 +48,28 @@ def list_osm_files(input_dir_path: str) -> list:
     osm_files = [file for file in os.listdir(input_dir_path) if file.endswith(".osm")]
     return osm_files
 
-def create_repair_directory(input_osm_file: str) -> None:
+def create_repair_directory(input_osm_file: str) -> str:
     # Get the input file name with no extension
     input_file_name = os.path.splitext(os.path.basename(input_osm_file))[0]
+    input_file_name = input_file_name.replace(".", "_")
     data_directory = os.path.join(os.path.dirname(input_osm_file), f"{input_file_name}_repair")
     if not os.path.exists(data_directory):
         os.makedirs(data_directory)
+
+    return data_directory
 
 
 def process_osm_file(input_osm_file: str):
 
     # Setup Output Filenames
     print("Setting up output filenames...")
+    # Get the input file name with no extension
+    input_file_name = os.path.splitext(os.path.basename(input_osm_file))[0]
+    input_file_name = input_file_name.replace(".", "_")
 
     data_directory = create_repair_directory(input_osm_file)
-    duplicate_way_file = os.path.join(data_directory, input_osm_file.replace(".osm", "_duplicate_ways.shp"))
-    repaired_osm_file = os.path.join(data_directory, input_osm_file.replace(".osm", "_repaired.osm"))
+    duplicate_way_file = os.path.join(data_directory, f"{input_file_name}_duplicate_ways.shp")
+    repaired_osm_file = os.path.join(data_directory, f"{input_file_name}_repaired.osm")
     
     # Derive and validate xml tree and root
     try:
@@ -131,6 +137,9 @@ if __name__ == "__main__":
 
     # Setup Logging
     print("Setting up logging...")
+    # if logging directory doesn't exist, create it
+    if not os.path.exists(os.path.join(working_directory, "logging")):
+        os.makedirs(os.path.join(working_directory, "logging"))
     log_file = os.path.join(working_directory, f"logging/logging_{datetime.now().strftime('%Y%m%d%H%M%S')}.log")
     print(log_file)
     logging.basicConfig(filename=log_file,
@@ -140,6 +149,7 @@ if __name__ == "__main__":
 
     # Check if file
     if is_file(input_user_prompt):
+        print(f"Processing {input_user_prompt}...")
         input_osm_file = input_user_prompt
 
         # Check if input_osm_file is .osm
@@ -160,7 +170,8 @@ if __name__ == "__main__":
             sys.exit(1)
 
         for input_osm_file in list_osm_files(data_directory):
-            process_osm_file(input_osm_file)
+            print(f"Processing {input_osm_file}...")
+            process_osm_file(os.path.join(data_directory, input_osm_file))
     
 
     
