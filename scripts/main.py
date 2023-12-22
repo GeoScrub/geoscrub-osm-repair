@@ -123,7 +123,8 @@ def process_osm_file(input_osm_file: str):
         
         # Output Message
         print("{} has been repaired.\n{} has been created\n{} duplicate ways have been removed\nAny questions reach out to www.GeoScrub.org".format(input_osm_file, repaired_osm_file, number_of_duplicate_ways))
-
+    else:
+        print("{} has no duplicate ways.\nAny questions reach out to www.GeoScrub.org".format(input_osm_file, number_of_duplicate_ways))
 
 if __name__ == "__main__":
 
