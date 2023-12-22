@@ -98,29 +98,31 @@ def process_osm_file(input_osm_file: str):
     duplicate_way_sets = find_duplicate_way_sets(way_nodes)
     number_of_duplicate_ways = len(duplicate_way_sets)
     print(f"Found {number_of_duplicate_ways} duplicate way sets:")
+    no_duplicates = False
     if number_of_duplicate_ways < 1:
         print("No duplicate way sets found.")
-        sys.exit(0)
+        no_duplicates = True
     
     # 2. Export duplicate ways to shapefile
-    try:
-        print("Exporting duplicate ways to shapefile...")
-        filter_and_save_duplicate_ways(way_gdf, duplicate_way_sets, duplicate_way_file)
-    except Exception as e:
-        logging.error(f"Error exporting duplicate ways to shapefile: {e}")
-        raise ValueError(f"Error exporting duplicate ways to shapefile: {e}")
-    
-    # 3. Repair the OSM file
-    try:
-        print("Repairing OSM file...")
-        relation_ways_to_remove =  process_relation_ways(root, duplicate_way_sets, way_gdf)
-        remove_ways_and_save_xml(root, tree, relation_ways_to_remove, repaired_osm_file)
-    except Exception as e:
-        logging.error(f"Error repairing OSM file: {e}")
-        raise ValueError(f"Error repairing OSM file: {e}")
-    
-    # Output Message
-    print("{} has been repaired.\n{} has been created\n{} duplicate ways have been removed\nAny questions reach out to www.GeoScrub.org".format(input_osm_file, repaired_osm_file, number_of_duplicate_ways))
+    if not no_duplicates:
+        try:
+            print("Exporting duplicate ways to shapefile...")
+            filter_and_save_duplicate_ways(way_gdf, duplicate_way_sets, duplicate_way_file)
+        except Exception as e:
+            logging.error(f"Error exporting duplicate ways to shapefile: {e}")
+            raise ValueError(f"Error exporting duplicate ways to shapefile: {e}")
+        
+        # 3. Repair the OSM file
+        try:
+            print("Repairing OSM file...")
+            relation_ways_to_remove =  process_relation_ways(root, duplicate_way_sets, way_gdf)
+            remove_ways_and_save_xml(root, tree, relation_ways_to_remove, repaired_osm_file)
+        except Exception as e:
+            logging.error(f"Error repairing OSM file: {e}")
+            raise ValueError(f"Error repairing OSM file: {e}")
+        
+        # Output Message
+        print("{} has been repaired.\n{} has been created\n{} duplicate ways have been removed\nAny questions reach out to www.GeoScrub.org".format(input_osm_file, repaired_osm_file, number_of_duplicate_ways))
 
 
 if __name__ == "__main__":
